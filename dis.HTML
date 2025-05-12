@@ -1,0 +1,3185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xid - Ваше пространство для общения</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /*  активность  */
+        :root {
+            --primary: #5865f2;
+            --primary-hover: #4752c4;
+            --primary-active: #3a45c2;
+            --background-primary: #36393f;
+            --background-secondary: #2f3136;
+            --background-tertiary: #202225;
+            --background-accent: #4f545c;
+            --text-normal: #dcddde;
+            --text-muted: #72767d;
+            --text-link: #00b0f4;
+            --online: #3ba55c;
+            --idle: #faa61a;
+            --dnd: #ed4245;
+            --offline: #747f8d;
+            --white: #ffffff;
+            --not-quite-black: #23272a;
+            --premium: #f47b67;
+            --nitro: #ff73fa;
+            --developer: #00f8e6;
+            --partner: #5d68e2;
+            --hypesquad: #f47b67;
+            --bug-hunter: #94b3ff;
+            --early-supporter: #ff73fa;
+        /*  основная херня */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--background-primary);
+            color: var(--text-normal);
+            block-size: 100vh;
+            overflow: hidden;
+        }
+
+        .app {
+            display: flex;
+            block-size: 100vh;
+        }
+
+        /* лист серверов */
+        .servers {
+            inline-size: 72px;
+            background-color: var(--background-tertiary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0 0;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .servers::-webkit-scrollbar {
+            display: none;
+        }
+
+        .server {
+            position: relative;
+            margin-block-end: 8px;
+            inline-size: 48px;
+            block-size: 48px;
+            border-radius: 50%;
+            background-color: var(--background-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .server:hover {
+            border-radius: 16px;
+            background-color: var(--primary);
+        }
+
+        .server.active {
+            border-radius: 16px;
+            background-color: var(--primary);
+        }
+
+        .server .indicator {
+            position: absolute;
+            inset-inline-start: -8px;
+            block-size: 0;
+            inline-size: 4px;
+            border-radius: 0 4px 4px 0;
+            background-color: var(--white);
+            transition: height 0.2s ease;
+        }
+
+        .server.active .indicator {
+            block-size: 40px;
+        }
+
+        .server:hover .indicator {
+            block-size: 20px;
+        }
+
+        .server .tooltip {
+            position: absolute;
+            inset-inline-start: 60px;
+            background-color: var(--not-quite-black);
+            color: var(--white);
+            padding: 6px 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.1s ease;
+            z-index: 10;
+        }
+
+        .server:hover .tooltip {
+            opacity: 1;
+        }
+
+        .server .icon {
+            inline-size: 24px;
+            block-size: 24px;
+            object-fit: contain;
+        }
+
+        .server.add-server {
+            color: var(--online);
+            background-color: var(--background-secondary);
+        }
+
+        .server.add-server:hover {
+            color: var(--white);
+            background-color: var(--online);
+        }
+
+        .server-separator {
+            inline-size: 32px;
+            block-size: 2px;
+            background-color: var(--background-accent);
+            margin: 8px 0;
+            border-radius: 1px;
+        }
+
+        /* Channel sidebar */
+        .channels {
+            inline-size: 240px;
+            background-color: var(--background-secondary);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .server-header {
+            block-size: 48px;
+            padding: 0 16px;
+            border-block-end: 1px solid rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .server-dropdown {
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .server-dropdown:hover {
+            color: var(--text-normal);
+        }
+
+        .channel-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .channel-category {
+            padding: 18px 16px 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .channel-category .add-channel {
+            color: var(--text-muted);
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .channel-category:hover .add-channel {
+            opacity: 1;
+        }
+
+        .channel {
+            padding: 6px 16px;
+            margin: 1px 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .channel:hover {
+            background-color: rgba(79, 84, 92, 0.16);
+            color: var(--text-normal);
+        }
+
+        .channel.active {
+            background-color: rgba(79, 84, 92, 0.32);
+            color: var(--text-normal);
+        }
+
+        .channel .hash {
+            margin-inline-end: 6px;
+            font-size: 20px;
+            font-weight: 300;
+        }
+
+        .channel .name {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .channel .voice-icon {
+            margin-inline-end: 6px;
+            font-size: 16px;
+        }
+
+        .channel.voice .voice-icon {
+            color: var(--online);
+        }
+
+        .user-panel {
+            block-size: 52px;
+            padding: 0 8px;
+            background-color: var(--background-tertiary);
+            display: flex;
+            align-items: center;
+        }
+
+        .user-avatar {
+            inline-size: 32px;
+            block-size: 32px;
+            border-radius: 50%;
+            background-color: var(--background-accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-inline-end: 8px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-avatar::before {
+            content: '';
+            position: absolute;
+            inline-size: 10px;
+            block-size: 10px;
+            background-color: var(--online);
+            border-radius: 50%;
+            border: 2px solid var(--background-tertiary);
+            inset-block-end: -2px;
+            inset-inline-end: -2px;
+        }
+
+        .user-avatar.offline::before {
+            background-color: var(--offline);
+        }
+
+        .user-avatar.idle::before {
+            background-color: var(--idle);
+        }
+
+        .user-avatar.dnd::before {
+            background-color: var(--dnd);
+        }
+
+        .user-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .username {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+        }
+            /*  бэйджики */
+        .badge {
+            margin-inline-start: 4px;
+            font-size: 12px;
+        }
+
+        .badge.premium {
+            color: var(--premium);
+        }
+
+        .badge.nitro {
+            color: var(--nitro);
+        }
+
+        .badge.developer {
+            color: var(--developer);
+        }
+
+        .badge.partner {
+            color: var(--partner);
+        }
+
+        .badge.hypesquad {
+            color: var(--hypesquad);
+        }
+
+        .badge.bug-hunter {
+            color: var(--bug-hunter);
+        }
+
+        .badge.early-supporter {
+            color: var(--early-supporter);
+        }
+
+        .user-tag {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+        }
+
+        .user-control {
+            inline-size: 32px;
+            block-size: 32px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .user-control:hover {
+            color: var(--text-normal);
+        }
+
+        /* Main chat area */
+        .chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--background-primary);
+        }
+
+        .chat-header {
+            block-size: 48px;
+            padding: 0 16px;
+            border-block-end: 1px solid rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .chat-header .hash {
+            color: var(--text-muted);
+            font-size: 24px;
+            font-weight: 300;
+            margin-inline-end: 8px;
+        }
+
+        .chat-header .name {
+            font-weight: 600;
+        }
+
+        .chat-header .topic {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-inline-start: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-header-actions {
+            margin-inline-start: auto;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-header-action {
+            inline-size: 32px;
+            block-size: 32px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .chat-header-action:hover {
+            color: var(--text-normal);
+            background-color: rgba(79, 84, 92, 0.16);
+        }
+
+        .chat-header-search {
+            inline-size: 144px;
+            block-size: 24px;
+            padding: 0 6px;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            color: var(--text-normal);
+            font-size: 14px;
+            border: none;
+            margin-inline-start: 8px;
+        }
+
+        .chat-header-search::placeholder {
+            color: var(--text-muted);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 16px;
+            scrollbar-width: thin;
+        }
+
+        .messages-container {
+            padding-block-start: 16px;
+        }
+
+        .message-group {
+            margin-block-end: 24px;
+            display: flex;
+            position: relative;
+        }
+
+        .message-group:hover .message-timestamp {
+            visibility: visible;
+        }
+
+        .message-avatar {
+            inline-size: 40px;
+            block-size: 40px;
+            border-radius: 50%;
+            background-color: var(--background-accent);
+            margin-inline-end: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            flex: 1;
+            min-inline-size: 0;
+        }
+
+        .message-header {
+            display: flex;
+            align-items: baseline;
+            margin-block-end: 4px;
+        }
+
+        .message-username {
+            font-weight: 600;
+            margin-inline-end: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .message-username:hover {
+            text-decoration: underline;
+        }
+
+        .message-timestamp {
+            color: var(--text-muted);
+            font-size: 12px;
+            visibility: hidden;
+        }
+
+        .message-text {
+            font-size: 16px;
+            line-height: 1.375;
+            word-wrap: break-word;
+        }
+
+        .message-actions {
+            position: absolute;
+            inset-inline-end: 16px;
+            inset-block-start: -8px;
+            background-color: var(--background-tertiary);
+            border-radius: 4px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1;
+        }
+
+        .message-group:hover .message-actions {
+            display: flex;
+        }
+
+        .message-action {
+            inline-size: 32px;
+            block-size: 32px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .message-action:hover {
+            color: var(--text-normal);
+        }
+
+        .message-reply {
+            margin-block-start: 4px;
+            padding-inline-start: 8px;
+            border-inline-start: 4px solid var(--background-accent);
+            color: var(--text-muted);
+        }
+
+        .message-reply-username {
+            color: var(--text-link);
+            font-weight: 500;
+        }
+
+        .message-input-container {
+            padding: 16px;
+            position: relative;
+        }
+
+        .message-input-scroll {
+            max-block-size: 50vh;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .message-input {
+            min-block-size: 44px;
+            padding: 11px 48px 11px 16px;
+            background-color: var(--background-tertiary);
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .message-input textarea {
+            inline-size: 100%;
+            background: none;
+            border: none;
+            color: var(--text-normal);
+            font-size: 16px;
+            line-height: 1.375;
+            resize: none;
+            outline: none;
+            max-block-size: 200px;
+        }
+
+        .message-input-buttons {
+            position: absolute;
+            inset-inline-end: 16px;
+            inset-block-end: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .message-input-button {
+            inline-size: 24px;
+            block-size: 24px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-inline-start: 8px;
+        }
+
+        .message-input-button:hover {
+            color: var(--text-normal);
+        }
+
+        /* Members sidebar */
+        .members {
+            inline-size: 240px;
+            background-color: var(--background-secondary);
+            padding: 16px 8px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .members-section {
+            margin-block-end: 24px;
+        }
+
+        .members-section-title {
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-block-end: 8px;
+            padding: 0 8px;
+        }
+
+        .member {
+            block-size: 42px;
+            padding: 0 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .member:hover {
+            background-color: rgba(79, 84, 92, 0.16);
+        }
+
+        .member-avatar {
+            inline-size: 32px;
+            block-size: 32px;
+            border-radius: 50%;
+            background-color: var(--background-accent);
+            margin-inline-end: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .member-avatar::before {
+            content: '';
+            position: absolute;
+            inline-size: 10px;
+            block-size: 10px;
+            background-color: var(--online);
+            border-radius: 50%;
+            border: 2px solid var(--background-secondary);
+            inset-block-end: -2px;
+            inset-inline-end: -2px;
+        }
+
+        .member-avatar.offline::before {
+            background-color: var(--offline);
+        }
+
+        .member-avatar.idle::before {
+            background-color: var(--idle);
+        }
+
+        .member-avatar.dnd::before {
+            background-color: var(--dnd);
+        }
+
+        .member-name {
+            font-size: 14px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            inline-size: 8px;
+            block-size: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--background-accent);
+            border-radius: 4px;
+            min-block-size: 40px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Animations */
+        @keyframes ping {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .ping {
+            animation: ping 1.5s infinite;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background-color: var(--not-quite-black);
+            color: var(--white);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        /* Context menu */
+        .context-menu {
+            position: absolute;
+            background-color: var(--background-tertiary);
+            border-radius: 4px;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.2);
+            min-inline-size: 160px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .context-menu-item {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: var(--text-normal);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .context-menu-item:hover {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .context-menu-item .icon {
+            margin-inline-end: 8px;
+            inline-size: 16px;
+            block-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .context-menu-separator {
+            block-size: 1px;
+            background-color: var(--background-accent);
+            margin: 4px 0;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            inset-block-start: 0;
+            inset-inline-start: 0;
+            inset-inline-end: 0;
+            inset-block-end: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background-color: var(--background-primary);
+            border-radius: 8px;
+            inline-size: 440px;
+            max-block-size: 90vh;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1), 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            padding: 16px;
+            border-block-end: 1px solid rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            inline-size: 32px;
+            block-size: 32px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            color: var(--text-normal);
+            background-color: rgba(79, 84, 92, 0.16);
+        }
+
+        .modal-body {
+            padding: 16px;
+        }
+
+        .modal-footer {
+            padding: 16px;
+            background-color: var(--background-secondary);
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:active {
+            background-color: var(--primary-active);
+        }
+
+        .btn-secondary {
+            background-color: var(--background-accent);
+            color: var(--text-normal);
+            margin-inline-end: 8px;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(79, 84, 92, 0.32);
+        }
+
+        .btn-secondary:active {
+            background-color: rgba(79, 84, 92, 0.48);
+        }
+
+        .btn-danger {
+            background-color: var(--dnd);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background-color: #d83a3c;
+        }
+
+        .btn-danger:active {
+            background-color: #c12a2c;
+        }
+
+        .form-group {
+            margin-block-end: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-block-end: 8px;
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            inline-size: 100%;
+            padding: 10px;
+            background-color: var(--background-tertiary);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-normal);
+            font-size: 16px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        /* премиум бэйдж */
+        .premium-badge {
+            background-color: var(--premium);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-inline-start: 8px;
+        }
+
+        /* создание серверов */
+        .server-icon-preview {
+            inline-size: 80px;
+            block-size: 80px;
+            border-radius: 50%;
+            background-color: var(--background-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* боты */
+        .bot-avatar-preview {
+            inline-size: 80px;
+            block-size: 80px;
+            border-radius: 50%;
+            background-color: var(--background-tertiary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* не разобрался не трогать блять */
+        @media (max-inline-size: 1200px) {
+            .members {
+                display: none;
+            }
+        }
+
+        @media (max-inline-size: 900px) {
+            .channels {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- лист серверов -->
+        <div class="servers" id="server-list">
+            <div class="server active" data-server="home">
+                <div class="indicator"></div>
+                <div class="tooltip">Домашний сервер</div>
+                <i class="fas fa-home"></i>
+            </div>
+            <!-- добавление сервера -->
+            <div class="server-separator"></div>
+            <div class="server add-server" id="add-server-btn">
+                <div class="tooltip">Добавить сервер</div>
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+
+        <!-- основной канал  -->
+        <div class="channels">
+            <div class="server-header">
+                <span id="server-name">Xid Главный</span>
+                <i class="fas fa-chevron-down server-dropdown" id="server-dropdown"></i>
+            </div>
+            <div class="channel-list" id="channel-list">
+                <div class="channel-category">
+                    <span>Текстовые каналы</span>
+                    <i class="fas fa-plus add-channel" id="add-text-channel"></i>
+                </div>
+                <div class="channel active" data-channel="general">
+                    <i class="fas fa-hashtag hash"></i>
+                    <span class="name">общий</span>
+                </div>
+                <!-- Channels will be added here dynamically -->
+                <div class="channel-category">
+                    <span>Голосовые каналы</span>
+                    <i class="fas fa-plus add-channel" id="add-voice-channel"></i>
+                </div>
+                <!-- Voice channels will be added here dynamically -->
+            </div>
+            <div class="user-panel">
+                <div class="user-avatar online" id="user-avatar">
+                    <span>U</span>
+                </div>
+                <div class="user-info">
+                    <span class="username">
+                        User123
+                        <i class="fas fa-crown premium-badge"></i>
+                        <i class="fas fa-code badge developer" title="Active Developer"></i>
+                        <i class="fas fa-shield-alt badge partner" title="Partnered Server Owner"></i>
+                    </span>
+                    <span class="user-tag">#1234</span>
+                </div>
+                <div class="user-controls">
+                    <div class="user-control">
+                        <i class="fas fa-microphone"></i>
+                    </div>
+                    <div class="user-control">
+                        <i class="fas fa-headphones"></i>
+                    </div>
+                    <div class="user-control settings-btn" id="settings-btn">
+                        <i class="fas fa-cog"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main chat -->
+        <div class="chat">
+            <div class="chat-header">
+                <i class="fas fa-hashtag hash"></i>
+                <span class="name" id="channel-name">общий</span>
+                <span class="topic" id="channel-topic">Обсуждение всего на свете</span>
+                <div class="chat-header-actions">
+                    <div class="chat-header-action">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <div class="chat-header-action">
+                        <i class="fas fa-pin"></i>
+                    </div>
+                    <div class="chat-header-action">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <input type="text" class="chat-header-search" placeholder="Поиск">
+                </div>
+            </div>
+            <div class="messages">
+                <div class="messages-container" id="messages-container">
+                    <!-- Messages will be added here dynamically -->
+                    <div class="message-group">
+                        <div class="message-avatar">
+                            <span>X</span>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-username">
+                                    Xid Bot
+                                    <i class="fas fa-robot badge developer" title="Official Bot"></i>
+                                </span>
+                                <span class="message-timestamp">Сегодня в 12:00</span>
+                            </div>
+                            <div class="message-text">
+                                Добро пожаловать на сервер Xid! Это начало канала #общий.
+                            </div>
+                        </div>
+                        <div class="message-actions">
+                            <div class="message-action">
+                                <i class="fas fa-reply"></i>
+                            </div>
+                            <div class="message-action">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="message-input-container">
+                <div class="message-input-scroll">
+                    <div class="message-input">
+                        <textarea id="message-input" placeholder="Написать сообщение в #общий" rows="1"></textarea>
+                        <div class="message-input-buttons">
+                            <div class="message-input-button">
+                                <i class="fas fa-gift"></i>
+                            </div>
+                            <div class="message-input-button">
+                                <i class="fas fa-image"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members sidebar -->
+        <div class="members">
+            <div class="members-section">
+                <div class="members-section-title">ОНЛАЙН — <span id="online-count">2</span></div>
+                <div class="member">
+                    <div class="member-avatar online">
+                        <span>U</span>
+                    </div>
+                    <div class="member-name">
+                        User123
+                        <i class="fas fa-crown premium-badge"></i>
+                    </div>
+                </div>
+                <div class="member">
+                    <div class="member-avatar online">
+                        <span>X</span>
+                    </div>
+                    <div class="member-name">
+                        Xid Bot
+                        <i class="fas fa-robot badge developer" title="Official Bot"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="members-section">
+                <div class="members-section-title">ОФФЛАЙН — <span id="offline-count">1</span></div>
+                <div class="member">
+                    <div class="member-avatar offline">
+                        <span>P</span>
+                    </div>
+                    <div class="member-name">
+                        ProGamer
+                        <i class="fas fa-gamepad badge early-supporter" title="Early Supporter"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Server creation modal -->
+        <div class="modal" id="server-creation-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Создать сервер Xid</div>
+                    <div class="modal-close" id="close-server-modal">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Название сервера</label>
+                        <input type="text" class="form-control" id="server-name-input" placeholder="Мой крутой сервер">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Иконка сервера</label>
+                        <div class="server-icon-preview" id="server-icon-preview">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Премиум сервер</label>
+                        <select class="form-control" id="server-premium">
+                            <option value="false">Обычный сервер (бесплатно)</option>
+                            <option value="true">Премиум сервер (+100 XP к сообщениям)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-server-creation">Отмена</button>
+                    <button class="btn btn-primary" id="create-server-btn">Создать сервер</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Channel creation modal -->
+        <div class="modal" id="channel-creation-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Создать канал</div>
+                    <div class="modal-close" id="close-channel-modal">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Тип канала</label>
+                        <select class="form-control" id="channel-type">
+                            <option value="text">Текстовый канал</option>
+                            <option value="voice">Голосовой канал</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Название канала</label>
+                        <input type="text" class="form-control" id="channel-name-input" placeholder="новый-канал">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-channel-creation">Отмена</button>
+                    <button class="btn btn-primary" id="create-channel-btn">Создать канал</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings modal -->
+        <div class="modal" id="settings-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Настройки пользователя</div>
+                    <div class="modal-close" id="close-settings-modal">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Профиль</label>
+                        <div style="text-align: center; margin-block-end: 16px;">
+                            <div class="user-avatar large" id="settings-avatar-preview">
+                                <span>U</span>
+                            </div>
+                            <button class="btn btn-secondary" id="change-avatar-btn" style="margin-block-start: 8px;">Изменить аватар</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="username-input" value="User123">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Статус</label>
+                        <select class="form-control" id="user-status-select">
+                            <option value="online">Online</option>
+                            <option value="idle">Idle</option>
+                            <option value="dnd">Do Not Disturb</option>
+                            <option value="offline">Invisible</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Премиум подписка</label>
+                        <div style="padding: 10px; background-color: var(--background-tertiary); border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Xid Premium</span>
+                                <button class="btn btn-primary" id="upgrade-premium">Активировать</button>
+                            </div>
+                            <p style="margin-block-start: 8px; font-size: 14px; color: var(--text-muted);">
+                                Получите эксклюзивные бейджи, анимированный аватар и больше возможностей!
+                            </p>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Бейджи</label>
+                        <div style="padding: 10px; background-color: var(--background-tertiary); border-radius: 4px;">
+                            <div style="margin-block-end: 8px;">
+                                <i class="fas fa-code badge developer" title="Active Developer"></i>
+                                <span>Active Developer</span>
+                            </div>
+                            <div style="margin-block-end: 8px;">
+                                <i class="fas fa-shield-alt badge partner" title="Partnered Server Owner"></i>
+                                <span>Partnered Server Owner</span>
+                            </div>
+                            <div>
+                                <i class="fas fa-gamepad badge early-supporter" title="Early Supporter"></i>
+                                <span>Early Supporter</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-settings">Отмена</button>
+                    <button class="btn btn-primary" id="save-settings">Сохранить изменения</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bot creation modal -->
+        <div class="modal" id="bot-creation-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Создать бота Xid</div>
+                    <div class="modal-close" id="close-bot-modal">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Имя бота</label>
+                        <input type="text" class="form-control" id="bot-name-input" placeholder="Мой крутой бот">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Аватар бота</label>
+                        <div class="bot-avatar-preview" id="bot-avatar-preview">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Префикс команд</label>
+                        <input type="text" class="form-control" id="bot-prefix-input" placeholder="!" value="!">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Описание бота</label>
+                        <textarea class="form-control" id="bot-description-input" rows="3" placeholder="Что делает ваш бот?"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="cancel-bot-creation">Отмена</button>
+                    <button class="btn btn-primary" id="create-bot-btn">Создать бота</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Premium modal -->
+        <div class="modal" id="premium-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Xid Premium</div>
+                    <div class="modal-close" id="close-premium-modal">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div style="text-align: center; margin-block-end: 24px;">
+                        <div style="font-size: 24px; font-weight: 700; color: var(--premium); margin-block-end: 8px;">
+                            <i class="fas fa-crown"></i> Xid Premium
+                        </div>
+                        <p style="color: var(--text-muted);">
+                            Получите эксклюзивные возможности для вашего аккаунта Xid!
+                        </p>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-block-end: 24px;">
+                        <div style="flex: 1; padding: 16px; background-color: var(--background-tertiary); border-radius: 4px; margin-inline-end: 8px;">
+                            <div style="font-weight: 700; margin-block-end: 8px;">1 месяц</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--premium); margin-block-end: 8px;">$4.99</div>
+                            <button class="btn btn-primary" style="inline-size: 100%;">Выбрать</button>
+                        </div>
+                        <div style="flex: 1; padding: 16px; background-color: var(--background-tertiary); border-radius: 4px; margin-inline-start: 8px;">
+                            <div style="font-weight: 700; margin-block-end: 8px;">12 месяцев</div>
+                            <div style="font-size: 24px; font-weight: 700; color: var(--premium); margin-block-end: 8px;">$49.99</div>
+                            <div style="font-size: 12px; color: var(--text-muted); margin-block-end: 8px;">Экономия $10</div>
+                            <button class="btn btn-primary" style="inline-size: 100%;">Выбрать</button>
+                        </div>
+                    </div>
+                    <div style="margin-block-end: 16px;">
+                        <div style="font-weight: 700; margin-block-end: 8px;">Преимущества Premium:</div>
+                        <ul style="padding-inline-start: 20px; color: var(--text-muted);">
+                            <li>Эксклюзивный бейдж в профиле</li>
+                            <li>Анимированный аватар</li>
+                            <li>Увеличенный лимит загрузки файлов (100MB)</li>
+                            <li>Доступ к премиум стикерам</li>
+                            <li>Специальные возможности для ботов</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Состояние приложения
+            const state = {
+                currentUser: {
+                    id: 'user123',
+                    username: 'User123',
+                    avatar: 'U',
+                    tag: '1234',
+                    status: 'online',
+                    badges: ['developer', 'partner'],
+                    premium: false
+                },
+                servers: [
+                    {
+                        id: 'home',
+                        name: 'Xid Главный',
+                        icon: 'home',
+                        premium: false,
+                        channels: [
+                            { id: 'general', name: 'общий', type: 'text', topic: 'Обсуждение всего на свете' },
+                            { id: 'games', name: 'игры', type: 'text', topic: 'Обсуждение игр' },
+                            { id: 'music', name: 'музыка', type: 'text', topic: 'Обсуждение музыки' },
+                            { id: 'voice-chat', name: 'Общий чат', type: 'voice' },
+                            { id: 'gaming-voice', name: 'Игровой чат', type: 'voice' }
+                        ]
+                    }
+                ],
+                currentServer: 'home',
+                currentChannel: 'general',
+                messages: [
+                    {
+                        id: '1',
+                        author: 'Xid Bot',
+                        avatar: 'X',
+                        content: 'Добро пожаловать на сервер Xid! Это начало канала #общий.',
+                        timestamp: 'Сегодня в 12:00',
+                        channel: 'general',
+                        badges: ['developer']
+                    }
+                ],
+                bots: [
+                    {
+                        id: 'xid-bot',
+                        name: 'Xid Bot',
+                        avatar: 'X',
+                        prefix: 'x!',
+                        description: 'Официальный бот Xid',
+                        owner: 'system'
+                    }
+                ],
+                members: [
+                    {
+                        id: 'user123',
+                        username: 'User123',
+                        avatar: 'U',
+                        status: 'online',
+                        badges: ['developer', 'partner'],
+                        premium: true
+                    },
+                    {
+                        id: 'xid-bot',
+                        username: 'Xid Bot',
+                        avatar: 'X',
+                        status: 'online',
+                        badges: ['developer'],
+                        premium: false
+                    },
+                    {
+                        id: 'progamer',
+                        username: 'ProGamer',
+                        avatar: 'P',
+                        status: 'offline',
+                        badges: ['early-supporter'],
+                        premium: false
+                    }
+                ]
+            };
+
+            // DOM элементы
+            const elements = {
+                serverList: document.getElementById('server-list'),
+                addServerBtn: document.getElementById('add-server-btn'),
+                serverName: document.getElementById('server-name'),
+                channelList: document.getElementById('channel-list'),
+                addTextChannel: document.getElementById('add-text-channel'),
+                addVoiceChannel: document.getElementById('add-voice-channel'),
+                channelName: document.getElementById('channel-name'),
+                channelTopic: document.getElementById('channel-topic'),
+                messagesContainer: document.getElementById('messages-container'),
+                messageInput: document.getElementById('message-input'),
+                onlineCount: document.getElementById('online-count'),
+                offlineCount: document.getElementById('offline-count'),
+                userAvatar: document.getElementById('user-avatar'),
+                settingsBtn: document.getElementById('settings-btn'),
+                
+                // Модальные окна
+                serverCreationModal: document.getElementById('server-creation-modal'),
+                serverNameInput: document.getElementById('server-name-input'),
+                serverIconPreview: document.getElementById('server-icon-preview'),
+                serverPremiumSelect: document.getElementById('server-premium'),
+                createServerBtn: document.getElementById('create-server-btn'),
+                closeServerModal: document.getElementById('close-server-modal'),
+                cancelServerCreation: document.getElementById('cancel-server-creation'),
+                
+                channelCreationModal: document.getElementById('channel-creation-modal'),
+                channelTypeSelect: document.getElementById('channel-type'),
+                channelNameInput: document.getElementById('channel-name-input'),
+                createChannelBtn: document.getElementById('create-channel-btn'),
+                closeChannelModal: document.getElementById('close-channel-modal'),
+                cancelChannelCreation: document.getElementById('cancel-channel-creation'),
+                
+                settingsModal: document.getElementById('settings-modal'),
+                settingsAvatarPreview: document.getElementById('settings-avatar-preview'),
+                usernameInput: document.getElementById('username-input'),
+                userStatusSelect: document.getElementById('user-status-select'),
+                changeAvatarBtn: document.getElementById('change-avatar-btn'),
+                upgradePremiumBtn: document.getElementById('upgrade-premium'),
+                saveSettingsBtn: document.getElementById('save-settings'),
+                closeSettingsModal: document.getElementById('close-settings-modal'),
+                cancelSettings: document.getElementById('cancel-settings'),
+                
+                botCreationModal: document.getElementById('bot-creation-modal'),
+                botNameInput: document.getElementById('bot-name-input'),
+                botAvatarPreview: document.getElementById('bot-avatar-preview'),
+                botPrefixInput: document.getElementById('bot-prefix-input'),
+                botDescriptionInput: document.getElementById('bot-description-input'),
+                createBotBtn: document.getElementById('create-bot-btn'),
+                closeBotModal: document.getElementById('close-bot-modal'),
+                cancelBotCreation: document.getElementById('cancel-bot-creation'),
+                
+                premiumModal: document.getElementById('premium-modal'),
+                closePremiumModal: document.getElementById('close-premium-modal')
+            };
+
+            // Инициализация приложения
+            function init() {
+                renderServers();
+                renderChannels();
+                renderMessages();
+                updateMemberCounts();
+                setupEventListeners();
+            }
+
+            // Рендер серверов
+            function renderServers() {
+                // Очищаем список серверов (кроме кнопки добавления)
+                while (elements.serverList.children.length > 2) {
+                    elements.serverList.removeChild(elements.serverList.lastChild);
+                }
+
+                // Добавляем серверы из состояния
+                state.servers.forEach(server => {
+                    if (server.id !== 'home') { // Домашний сервер уже есть
+                        const serverElement = document.createElement('div');
+                        serverElement.className = `server ${server.id === state.currentServer ? 'active' : ''}`;
+                        serverElement.dataset.server = server.id;
+                        serverElement.innerHTML = `
+                            <div class="indicator"></div>
+                            <div class="tooltip">${server.name}</div>
+                            <i class="fas fa-${server.icon || 'hashtag'}"></i>
+                        `;
+                        elements.serverList.insertBefore(serverElement, elements.serverList.lastChild);
+                    }
+                });
+            }
+
+            // Рендер каналов
+            function renderChannels() {
+                const currentServer = state.servers.find(s => s.id === state.currentServer);
+                if (!currentServer) return;
+
+                // Обновляем название сервера
+                elements.serverName.textContent = currentServer.name;
+
+                // Очищаем список каналов (кроме категорий и кнопок добавления)
+                const channelList = elements.channelList;
+                while (channelList.children.length > 2) {
+                    channelList.removeChild(channelList.lastChild);
+                }
+
+                // Группируем каналы по типам
+                const textChannels = currentServer.channels.filter(c => c.type === 'text');
+                const voiceChannels = currentServer.channels.filter(c => c.type === 'voice');
+
+                // Добавляем текстовые каналы
+                textChannels.forEach(channel => {
+                    const channelElement = document.createElement('div');
+                    channelElement.className = `channel ${channel.id === state.currentChannel ? 'active' : ''}`;
+                    channelElement.dataset.channel = channel.id;
+                    channelElement.innerHTML = `
+                        <i class="fas fa-hashtag hash"></i>
+                        <span class="name">${channel.name}</span>
+                    `;
+                    channelList.insertBefore(channelElement, channelList.children[2]);
+                });
+
+                // Добавляем голосовые каналы
+                voiceChannels.forEach(channel => {
+                    const channelElement = document.createElement('div');
+                    channelElement.className = `channel voice ${channel.id === state.currentChannel ? 'active' : ''}`;
+                    channelElement.dataset.channel = channel.id;
+                    channelElement.innerHTML = `
+                        <i class="fas fa-volume-up voice-icon"></i>
+                        <span class="name">${channel.name}</span>
+                    `;
+                    channelList.appendChild(channelElement);
+                });
+
+                // Обновляем информацию о текущем канале
+                updateCurrentChannelInfo();
+            }
+
+            // Обновление информации о текущем канале
+            function updateCurrentChannelInfo() {
+                const currentServer = state.servers.find(s => s.id === state.currentServer);
+                if (!currentServer) return;
+
+                const channel = currentServer.channels.find(c => c.id === state.currentChannel);
+                if (!channel) return;
+
+                elements.channelName.textContent = channel.name;
+                elements.channelTopic.textContent = channel.topic || '';
+                elements.messageInput.placeholder = `Написать сообщение в #${channel.name}`;
+            }
+
+            // Рендер сообщений
+            function renderMessages() {
+                elements.messagesContainer.innerHTML = '';
+
+                const channelMessages = state.messages.filter(m => m.channel === state.currentChannel);
+                if (channelMessages.length === 0) {
+                    elements.messagesContainer.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 16px;">Здесь пока нет сообщений</div>';
+                    return;
+                }
+
+                channelMessages.forEach(msg => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message-group';
+                    messageElement.innerHTML = `
+                        <div class="message-avatar">
+                            <span>${msg.avatar}</span>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-username">
+                                    ${msg.author}
+                                    ${renderBadges(msg.badges)}
+                                </span>
+                                <span class="message-timestamp">${msg.timestamp}</span>
+                            </div>
+                            <div class="message-text">
+                                ${msg.content}
+                            </div>
+                        </div>
+                        <div class="message-actions">
+                            <div class="message-action">
+                                <i class="fas fa-reply"></i>
+                            </div>
+                            <div class="message-action">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </div>
+                        </div>
+                    `;
+                    elements.messagesContainer.appendChild(messageElement);
+                });
+
+                // Прокрутка вниз
+                elements.messagesContainer.scrollTop = elements.messagesContainer.scrollHeight;
+            }
+
+            // Рендер бейджей
+            function renderBadges(badges = []) {
+                if (!badges || badges.length === 0) return '';
+                
+                return badges.map(badge => {
+                    switch (badge) {
+                        case 'developer':
+                            return '<i class="fas fa-code badge developer" title="Active Developer"></i>';
+                        case 'partner':
+                            return '<i class="fas fa-shield-alt badge partner" title="Partnered Server Owner"></i>';
+                        case 'hypesquad':
+                            return '<i class="fas fa-star badge hypesquad" title="HypeSquad Events"></i>';
+                        case 'bug-hunter':
+                            return '<i class="fas fa-bug badge bug-hunter" title="Bug Hunter"></i>';
+                        case 'early-supporter':
+                            return '<i class="fas fa-gamepad badge early-supporter" title="Early Supporter"></i>';
+                        case 'premium':
+                            return '<i class="fas fa-crown premium-badge" title="Xid Premium"></i>';
+                        default:
+                            return '';
+                    }
+                }).join(' ');
+            }
+
+            // Обновление счетчиков участников
+            function updateMemberCounts() {
+                const online = state.members.filter(m => m.status !== 'offline').length;
+                const offline = state.members.filter(m => m.status === 'offline').length;
+                
+                elements.onlineCount.textContent = online;
+                elements.offlineCount.textContent = offline;
+            }
+
+            // Отправка сообщения
+            function sendMessage() {
+                const content = elements.messageInput.value.trim();
+                if (!content) return;
+
+                const newMessage = {
+                    id: `msg-${Date.now()}`,
+                    author: state.currentUser.username,
+                    avatar: state.currentUser.avatar,
+                    content: content,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    channel: state.currentChannel,
+                    badges: state.currentUser.badges
+                };
+
+                state.messages.push(newMessage);
+                renderMessages();
+                elements.messageInput.value = '';
+                
+                // Автоматический ответ бота
+                if (Math.random() > 0.5) {
+                    setTimeout(() => {
+                        const botMessages = [
+                            'Отличное сообщение!',
+                            'Xid - лучшая платформа для общения!',
+                            'Попробуйте создать своего бота с помощью команды /create-bot',
+                            'Хотите премиум? Нажмите на значок настроек!',
+                            'Как ваши дела?'
+                        ];
+                        const randomResponse = botMessages[Math.floor(Math.random() * botMessages.length)];
+                        
+                        const botMessage = {
+                            id: `msg-${Date.now() + 1}`,
+                            author: 'Xid Bot',
+                            avatar: 'X',
+                            content: randomResponse,
+                            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            channel: state.currentChannel,
+                            badges: ['developer']
+                        };
+                        
+                        state.messages.push(botMessage);
+                        renderMessages();
+                    }, 1000 + Math.random() * 2000);
+                }
+            }
+
+            // Создание сервера
+            function createServer(name, icon, premium) {
+                const newServer = {
+                    id: `server-${Date.now()}`,
+                    name: name || 'Новый сервер',
+                    icon: icon || 'hashtag',
+                    premium: premium || false,
+                    channels: [
+                        { id: 'general', name: 'общий', type: 'text', topic: 'Обсуждение всего на свете' }
+                    ]
+                };
+
+                state.servers.push(newServer);
+                state.currentServer = newServer.id;
+                state.currentChannel = 'general';
+                
+                renderServers();
+                renderChannels();
+                renderMessages();
+            }
+
+            // Создание канала
+            function createChannel(name, type) {
+                const currentServer = state.servers.find(s => s.id === state.currentServer);
+                if (!currentServer) return;
+
+                const newChannel = {
+                    id: `channel-${Date.now()}`,
+                    name: name || (type === 'text' ? 'новый-канал' : 'новый-голосовой'),
+                    type: type || 'text'
+                };
+
+                currentServer.channels.push(newChannel);
+                
+                if (type === 'text') {
+                    // Добавляем в текстовые каналы
+                    state.currentChannel = newChannel.id;
+                }
+                
+                renderChannels();
+                
+                if (type === 'text') {
+                    renderMessages();
+                }
+            }
+
+            // Создание бота
+            function createBot(name, avatar, prefix, description) {
+                const newBot = {
+                    id: `bot-${Date.now()}`,
+                    name: name || 'Мой бот',
+                    avatar: avatar || 'B',
+                    prefix: prefix || '!',
+                    description: description || 'Мой крутой бот для Xid',
+                    owner: state.currentUser.id
+                };
+
+                state.bots.push(newBot);
+                
+                // Добавляем бота как участника
+                state.members.push({
+                    id: newBot.id,
+                    username: newBot.name,
+                    avatar: newBot.avatar,
+                    status: 'online',
+                    badges: [],
+                    premium: false
+                });
+                
+                updateMemberCounts();
+                
+                // Отправляем сообщение от бота
+                const botMessage = {
+                    id: `msg-${Date.now()}`,
+                    author: newBot.name,
+                    avatar: newBot.avatar,
+                    content: `Привет! Я ${newBot.name}. Используйте префикс "${newBot.prefix}" для моих команд. ${newBot.description}`,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    channel: state.currentChannel,
+                    badges: []
+                };
+                
+                state.messages.push(botMessage);
+                renderMessages();
+            }
+
+            // Обновление пользователя
+            function updateUser(username, avatar, status) {
+                if (username) {
+                    state.currentUser.username = username;
+                }
+                if (avatar) {
+                    state.currentUser.avatar = avatar;
+                }
+                if (status) {
+                    state.currentUser.status = status;
+                }
+                
+                // Обновляем в списке участников
+                const userMember = state.members.find(m => m.id === state.currentUser.id);
+                if (userMember) {
+                    if (username) userMember.username = username;
+                    if (avatar) userMember.avatar = avatar;
+                    if (status) userMember.status = status;
+                }
+                
+                // Обновляем в сообщениях
+                state.messages.forEach(msg => {
+                    if (msg.author === state.currentUser.username) {
+                        if (avatar) msg.avatar = avatar;
+                    }
+                });
+                
+                renderMessages();
+                updateMemberCounts();
+            }
+
+            // Активация премиума
+            function activatePremium() {
+                state.currentUser.premium = true;
+                if (!state.currentUser.badges.includes('premium')) {
+                    state.currentUser.badges.push('premium');
+                }
+                
+                // Обновляем в списке участников
+                const userMember = state.members.find(m => m.id === state.currentUser.id);
+                if (userMember) {
+                    userMember.premium = true;
+                    if (!userMember.badges.includes('premium')) {
+                        userMember.badges.push('premium');
+                    }
+                }
+                
+                renderMessages();
+                updateMemberCounts();
+            }
+
+            // Настройка обработчиков событий
+            function setupEventListeners() {
+                // Клик по серверам
+                elements.serverList.addEventListener('click', (e) => {
+                    const serverElement = e.target.closest('.server:not(.add-server)');
+                    if (serverElement) {
+                        state.currentServer = serverElement.dataset.server;
+                        state.currentChannel = 'general'; // Переходим в общий канал
+                        renderServers();
+                        renderChannels();
+                        renderMessages();
+                    }
+                });
+
+                // Добавление сервера
+                elements.addServerBtn.addEventListener('click', () => {
+                    elements.serverCreationModal.classList.add('active');
+                });
+
+                // Создание сервера
+                elements.createServerBtn.addEventListener('click', () => {
+                    const name = elements.serverNameInput.value.trim() || 'Новый сервер';
+                    const premium = elements.serverPremiumSelect.value === 'true';
+                    createServer(name, 'hashtag', premium);
+                    elements.serverCreationModal.classList.remove('active');
+                });
+
+                // Закрытие модалки сервера
+                elements.closeServerModal.addEventListener('click', () => {
+                    elements.serverCreationModal.classList.remove('active');
+                });
+                elements.cancelServerCreation.addEventListener('click', () => {
+                    elements.serverCreationModal.classList.remove('active');
+                });
+
+                // Клик по каналам
+                elements.channelList.addEventListener('click', (e) => {
+                    const channelElement = e.target.closest('.channel');
+                    if (channelElement) {
+                        state.currentChannel = channelElement.dataset.channel;
+                        renderChannels();
+                        
+                        // Для текстовых каналов обновляем сообщения
+                        const currentServer = state.servers.find(s => s.id === state.currentServer);
+                        if (currentServer) {
+                            const channel = currentServer.channels.find(c => c.id === state.currentChannel);
+                            if (channel && channel.type === 'text') {
+                                renderMessages();
+                            }
+                        }
+                    }
+                });
+
+                // Добавление текстового канала
+                elements.addTextChannel.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    elements.channelTypeSelect.value = 'text';
+                    elements.channelCreationModal.classList.add('active');
+                });
+
+                // Добавление голосового канала
+                elements.addVoiceChannel.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    elements.channelTypeSelect.value = 'voice';
+                    elements.channelCreationModal.classList.add('active');
+                });
+
+                // Создание канала
+                elements.createChannelBtn.addEventListener('click', () => {
+                    const name = elements.channelNameInput.value.trim() || 
+                                 (elements.channelTypeSelect.value === 'text' ? 'новый-канал' : 'новый-голосовой');
+                    const type = elements.channelTypeSelect.value;
+                    createChannel(name, type);
+                    elements.channelCreationModal.classList.remove('active');
+                });
+
+                // Закрытие модалки канала
+                elements.closeChannelModal.addEventListener('click', () => {
+                    elements.channelCreationModal.classList.remove('active');
+                });
+                elements.cancelChannelCreation.addEventListener('click', () => {
+                    elements.channelCreationModal.classList.remove('active');
+                });
+
+                // Отправка сообщения
+                elements.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                    
+                    // Автоматическое увеличение высоты textarea
+                    if (e.key === 'Enter' && e.shiftKey) {
+                        setTimeout(() => {
+                            elements.messageInput.style.height = 'auto';
+                            elements.messageInput.style.height = elements.messageInput.scrollHeight + 'px';
+                        }, 0);
+                    }
+                });
+
+                elements.messageInput.addEventListener('input', () => {
+                    elements.messageInput.style.height = 'auto';
+                    elements.messageInput.style.height = elements.messageInput.scrollHeight + 'px';
+                });
+
+                // Настройки пользователя
+                elements.settingsBtn.addEventListener('click', () => {
+                    elements.settingsModal.classList.add('active');
+                    elements.usernameInput.value = state.currentUser.username;
+                    elements.userStatusSelect.value = state.currentUser.status;
+                    elements.settingsAvatarPreview.textContent = state.currentUser.avatar;
+                });
+
+                // Сохранение настроек
+                elements.saveSettingsBtn.addEventListener('click', () => {
+                    const username = elements.usernameInput.value.trim();
+                    const status = elements.userStatusSelect.value;
+                    const avatar = elements.settingsAvatarPreview.textContent;
+                    
+                    updateUser(username, avatar, status);
+                    elements.settingsModal.classList.remove('active');
+                });
+
+                // Закрытие модалки настроек
+                elements.closeSettingsModal.addEventListener('click', () => {
+                    elements.settingsModal.classList.remove('active');
+                });
+                elements.cancelSettings.addEventListener('click', () => {
+                    elements.settingsModal.classList.remove('active');
+                });
+
+                // Смена аватарки
+                elements.changeAvatarBtn.addEventListener('click', () => {
+                    const avatars = ['U', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'X'];
+                    const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+                    elements.settingsAvatarPreview.textContent = randomAvatar;
+                });
+
+                // Премиум
+                elements.upgradePremiumBtn.addEventListener('click', () => {
+                    elements.settingsModal.classList.remove('active');
+                    elements.premiumModal.classList.add('active');
+                });
+
+                // Активация премиума
+                document.querySelectorAll('#premium-modal .btn-primary').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        activatePremium();
+                        elements.premiumModal.classList.remove('active');
+                    });
+                });
+
+                // Закрытие модалки премиума
+                elements.closePremiumModal.addEventListener('click', () => {
+                    elements.premiumModal.classList.remove('active');
+                });
+
+                // Создание бота (контекстное меню)
+                document.addEventListener('contextmenu', (e) => {
+                    if (e.target.closest('.channel-list')) {
+                        e.preventDefault();
+                        
+                        // Показываем меню с опцией создания бота
+                        const contextMenu = document.createElement('div');
+                        contextMenu.className = 'context-menu';
+                        contextMenu.style.left = `${e.pageX}px`;
+                        contextMenu.style.top = `${e.pageY}px`;
+                        contextMenu.innerHTML = `
+                            <div class="context-menu-item" id="create-bot-option">
+                                <div class="icon"><i class="fas fa-robot"></i></div>
+                                <span>Создать бота</span>
+                            </div>
+                            <div class="context-menu-separator"></div>
+                            <div class="context-menu-item">
+                                <div class="icon"><i class="fas fa-plus"></i></div>
+                                <span>Создать канал</span>
+                            </div>
+                        `;
+                        document.body.appendChild(contextMenu);
+                        
+                        // Обработчик создания бота
+                        document.getElementById('create-bot-option').addEventListener('click', () => {
+                            elements.botCreationModal.classList.add('active');
+                            document.body.removeChild(contextMenu);
+                        });
+                        
+                        // Закрытие контекстного меню при клике вне его
+                        const closeContextMenu = () => {
+                            if (document.body.contains(contextMenu)) {
+                                document.body.removeChild(contextMenu);
+                            }
+                            document.removeEventListener('click', closeContextMenu);
+                        };
+                        
+                        setTimeout(() => {
+                            document.addEventListener('click', closeContextMenu);
+                        }, 100);
+                    }
+                });
+
+                // Создание бота
+                elements.createBotBtn.addEventListener('click', () => {
+                    const name = elements.botNameInput.value.trim() || 'Мой бот';
+                    const avatar = elements.botAvatarPreview.textContent || 'B';
+                    const prefix = elements.botPrefixInput.value.trim() || '!';
+                    const description = elements.botDescriptionInput.value.trim() || 'Мой крутой бот для Xid';
+                    
+                    createBot(name, avatar, prefix, description);
+                    elements.botCreationModal.classList.remove('active');
+                });
+
+                // Закрытие модалки бота
+                elements.closeBotModal.addEventListener('click', () => {
+                    elements.botCreationModal.classList.remove('active');
+                });
+                elements.cancelBotCreation.addEventListener('click', () => {
+                    elements.botCreationModal.classList.remove('active');
+                });
+
+                // Смена аватарки бота
+                elements.botAvatarPreview.addEventListener('click', () => {
+                    const botAvatars = ['X', 'B', 'R', 'Q', 'W', 'M', 'N'];
+                    const randomAvatar = botAvatars[Math.floor(Math.random() * botAvatars.length)];
+                    elements.botAvatarPreview.textContent = randomAvatar;
+                });
+            }
+
+            // Запуск приложения
+            init();
+        });
+    </script>
+
+    <!-- Добавьте этот код в конец body перед закрывающим тегом </body> -->
+
+<!-- Модальное окно голосового чата -->
+<div class="modal" id="voice-chat-modal">
+    <div class="modal-content" style="inline-size: 800px; max-inline-size: 90vw;">
+        <div class="modal-header">
+            <div class="modal-title">Голосовой канал: <span id="voice-channel-name"></span></div>
+            <div class="modal-close" id="close-voice-modal">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="voice-chat-container">
+                <div class="video-container" id="video-container">
+                    <!-- Видео участников будет добавляться сюда -->
+                    <div class="video-preview">
+                        <video id="local-video" autoplay muted></video>
+                        <div class="video-controls">
+                            <button class="video-control-btn" id="toggle-mic">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="video-control-btn" id="toggle-camera">
+                                <i class="fas fa-video"></i>
+                            </button>
+                            <button class="video-control-btn" id="toggle-screen">
+                                <i class="fas fa-desktop"></i>
+                            </button>
+                            <button class="video-control-btn" id="leave-voice">
+                                <i class="fas fa-phone-slash"></i>
+                            </button>
+                        </div>
+                        <div class="video-user-info">
+                            <span>Вы</span>
+                            <div class="video-status">
+                                <i class="fas fa-microphone"></i>
+                                <i class="fas fa-video"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="voice-participants">
+                    <div class="section-title">УЧАСТНИКИ — <span id="voice-participants-count">1</span></div>
+                    <div class="participants-list" id="participants-list">
+                        <!-- Участники будут добавляться сюда -->
+                    </div>
+                    <div class="voice-settings">
+                        <div class="quality-selector">
+                            <label>Качество видео:</label>
+                            <select id="video-quality">
+                                <option value="480">480p (стандарт)</option>
+                                <option value="720">720p (премиум)</option>
+                                <option value="1080">1080p (премиум+)</option>
+                            </select>
+                        </div>
+                        <div class="audio-settings">
+                            <label>Громкость:</label>
+                            <input type="range" id="volume-slider" min="0" max="100" value="80">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Мини-профиль пользователя -->
+<div class="user-profile-popup" id="user-profile-popup">
+    <div class="profile-header">
+        <div class="profile-banner"></div>
+        <div class="profile-avatar">
+            <img id="profile-avatar-img" src="" alt="Аватар">
+        </div>
+        <div class="profile-badges" id="profile-badges">
+            <!-- Бейджи будут добавляться сюда -->
+        </div>
+    </div>
+    <div class="profile-body">
+        <div class="profile-username" id="profile-username">
+            <span>Username</span>
+            <span class="profile-tag">#0000</span>
+        </div>
+        <div class="profile-status">
+            <div class="status-dot online"></div>
+            <span id="profile-status-text">Online</span>
+        </div>
+        <div class="profile-game" id="profile-game">
+            <i class="fas fa-gamepad"></i>
+            <span>Играет в Valorant (2ч 15м)</span>
+        </div>
+        <div class="profile-bio" id="profile-bio">
+            Описание профиля...
+        </div>
+        <div class="profile-actions">
+            <button class="profile-action-btn">
+                <i class="fas fa-comment"></i> Написать
+            </button>
+            <button class="profile-action-btn">
+                <i class="fas fa-at"></i> Упомянуть
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно создания бота -->
+<div class="modal" id="bot-creation-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title">Создать бота Xid</div>
+            <div class="modal-close" id="close-bot-modal">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Имя бота</label>
+                <input type="text" class="form-control" id="bot-name-input" placeholder="Мой крутой бот">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Аватар бота</label>
+                <div class="bot-avatar-preview" id="bot-avatar-preview">
+                    <i class="fas fa-robot"></i>
+                    <input type="file" id="bot-avatar-upload" accept="image/*" style="display: none;">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Префикс команд</label>
+                <input type="text" class="form-control" id="bot-prefix-input" placeholder="!" value="!">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Описание бота</label>
+                <textarea class="form-control" id="bot-description-input" rows="3" placeholder="Что делает ваш бот?"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ответы бота</label>
+                <div class="bot-responses" id="bot-responses">
+                    <div class="bot-response-item">
+                        <input type="text" class="form-control" placeholder="Триггер (например: привет)">
+                        <input type="text" class="form-control" placeholder="Ответ (например: Привет, друг!)">
+                        <button class="btn btn-secondary remove-response">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" id="add-response">
+                    <i class="fas fa-plus"></i> Добавить ответ
+                </button>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="cancel-bot-creation">Отмена</button>
+            <button class="btn btn-primary" id="create-bot-btn">Создать бота</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно поиска серверов -->
+<div class="modal" id="server-search-modal">
+    <div class="modal-content" style="max-inline-size: 600px;">
+        <div class="modal-header">
+            <div class="modal-title">Поиск серверов Xid</div>
+            <div class="modal-close" id="close-search-modal">
+                <i class="fas fa-times"></i>
+            </div>
+        </div>
+        <div class="modal-body">
+            <div class="search-container">
+                <input type="text" class="form-control" id="server-search-input" placeholder="Введите название сервера">
+                <button class="btn btn-primary" id="search-servers-btn">
+                    <i class="fas fa-search"></i> Поиск
+                </button>
+            </div>
+            <div class="server-list" id="server-search-results">
+                <!-- Результаты поиска будут здесь -->
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <p>Введите запрос для поиска серверов</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Добавьте этот JavaScript код в конец script.js
+
+    // Голосовой чат и демонстрация экрана
+    let localStream;
+    let peerConnections = {};
+    let screenStream;
+    let isMuted = false;
+    let isVideoOff = false;
+    let isSharingScreen = false;
+    let currentVideoQuality = '480';
+
+    async function startVoiceChat() 
+        {try {
+            // Получаем доступ к медиаустройствам
+            localStream = await navig
+            ator.mediaDevices.getUserMedia({
+                audio: true,
+                video: {
+                    inlinesize: { ideal: 640 },
+                    blocksize: { ideal: 480 }
+                }
+            });
+
+            // Показываем локальное видео
+            const localVideo = document.getElementById('local-video');
+            localVideo.srcObject = localStream;
+
+            // Обновляем интерфейс
+            document.getElementById('voice-channel-name').textContent = 
+                document.querySelector(`.channel[data-channel="${state.currentChannel}"] .name`).textContent;
+            document.getElementById('voice-chat-modal').classList.add('active');
+
+            // Симуляция подключения других участников
+            simulateParticipants();
+
+        } catch (err) {
+            console.error('Ошибка доступа к медиаустройствам:', err);
+            alert('Не удалось получить доступ к камере/микрофону');
+        }
+    }
+
+    function simulateParticipants() {
+        // Очищаем список участников
+        document.getElementById('participants-list').innerHTML = '';
+
+        // Добавляем текущего пользователя
+        addParticipant({
+            id: state.currentUser.id,
+            username: state.currentUser.username,
+            avatar: state.currentUser.avatar,
+            isMuted: false,
+            isVideoOff: false
+        });
+
+        // Симулируем 3-х случайных участников
+        const sampleUsers = [
+            { id: 'user2', username: 'GamerPro', avatar: 'G', isMuted: Math.random() > 0.5, isVideoOff: Math.random() > 0.5 },
+            { id: 'user3', username: 'Streamer', avatar: 'S', isMuted: Math.random() > 0.5, isVideoOff: Math.random() > 0.5 },
+            { id: 'user4', username: 'Developer', avatar: 'D', isMuted: Math.random() > 0.5, isVideoOff: Math.random() > 0.5 }
+        ];
+
+        sampleUsers.forEach(user => {
+            addParticipant(user);
+            
+            // Добавляем видео для некоторых участников
+            if (!user.isVideoOff && Math.random() > 0.3) {
+                addRemoteVideo(user.id, user.username);
+            }
+        });
+
+        // Обновляем счетчик участников
+        document.getElementById('voice-participants-count').textContent = sampleUsers.length + 1;
+    }
+
+    function addParticipant(user) {
+        const participantElement = document.createElement('div');
+        participantElement.className = 'participant';
+        participantElement.dataset.userId = user.id;
+        participantElement.innerHTML = `
+            <div class="participant-avatar">${user.avatar}</div>
+            <div class="participant-info">
+                <div class="participant-name">${user.username}</div>
+                <div class="participant-status">
+                    <i class="fas fa-microphone${user.isMuted ? '-slash' : ''}"></i>
+                    <i class="fas fa-video${user.isVideoOff ? '-slash' : ''}"></i>
+                </div>
+            </div>
+        `;
+        document.getElementById('participants-list').appendChild(participantElement);
+    }
+
+    function addRemoteVideo(userId, username) {
+        const videoContainer = document.getElementById('video-container');
+        const videoElement = document.createElement('div');
+        videoElement.className = 'video-preview';
+        videoElement.innerHTML = `
+            <video id="remote-video-${userId}" autoplay></video>
+            <div class="video-user-info">
+                <span>${username}</span>
+                <div class="video-status">
+                    <i class="fas fa-microphone"></i>
+                    <i class="fas fa-video"></i>
+                </div>
+            </div>
+        `;
+        videoContainer.appendChild(videoElement);
+
+        // Симулируем видео (в реальном приложении здесь было бы подключение WebRTC)
+        setTimeout(() => {
+            const video = document.getElementById(`remote-video-${userId}`);
+            // В реальном приложении здесь бы использовался поток от другого участника
+            video.srcObject = localStream; // Для демонстрации используем локальный поток
+        }, 1000);
+    }
+
+    async function toggleScreenShare() {
+        if (isSharingScreen) {
+            // Останавливаем демонстрацию экрана
+            screenStream.getTracks().forEach(track => track.stop());
+            document.getElementById('local-video').srcObject = localStream;
+            isSharingScreen = false;
+            document.getElementById('toggle-screen').innerHTML = '<i class="fas fa-desktop"></i>';
+        } else {
+            try {
+                // Начинаем демонстрацию экрана (только для HTTPS)
+                screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        inlinesize: { ideal: 1280 },
+                        blocksize: { ideal: 720 }
+                    },
+                    audio: false
+                });
+
+                document.getElementById('local-video').srcObject = screenStream;
+                isSharingScreen = true;
+                document.getElementById('toggle-screen').innerHTML = '<i class="fas fa-stop"></i>';
+
+                // Обработчик остановки демонстрации экрана
+                screenStream.getVideoTracks()[0].onended = () => {
+                    if (isSharingScreen) {
+                        toggleScreenShare();
+                    }
+                };
+
+            } catch (err) {
+                console.error('Ошибка демонстрации экрана:', err);
+            }
+        }
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        localStream.getAudioTracks().forEach(track => {
+            track.enabled = !isMuted;
+        });
+        document.getElementById('toggle-mic').innerHTML = isMuted ? 
+            '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
+    }
+
+    function toggleVideo() {
+        isVideoOff = !isVideoOff;
+        localStream.getVideoTracks().forEach(track => {
+            track.enabled = !isVideoOff;
+        });
+        document.getElementById('toggle-camera').innerHTML = isVideoOff ? 
+            '<i class="fas fa-video-slash"></i>' : '<i class="fas fa-video"></i>';
+    }
+
+    function leaveVoiceChat() {
+        // Останавливаем все медиапотоки
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+        if (screenStream) {
+            screenStream.getTracks().forEach(track => track.stop());
+        }
+
+        // Закрываем модальное окно
+        document.getElementById('voice-chat-modal').classList.remove('active');
+    }
+
+    // Обработчики для голосового чата
+    document.getElementById('toggle-mic').addEventListener('click', toggleMute);
+    document.getElementById('toggle-camera').addEventListener('click', toggleVideo);
+    document.getElementById('toggle-screen').addEventListener('click', toggleScreenShare);
+    document.getElementById('leave-voice').addEventListener('click', leaveVoiceChat);
+    document.getElementById('close-voice-modal').addEventListener('click', leaveVoiceChat);
+
+    // Ограничение качества для бесплатных пользователей
+    document.getElementById('video-quality').addEventListener('change', function() {
+        if (!state.currentUser.premium && this.value !== '480') {
+            alert('Для качества выше 480p требуется премиум подписка!');
+            this.value = '480';
+            return;
+        }
+        currentVideoQuality = this.value;
+        // В реальном приложении здесь бы обновлялось качество видео
+    });
+
+    // Показываем мини-профиль при клике на аватар
+    function showUserProfile(userId) {
+        const user = state.members.find(m => m.id === userId) || state.currentUser;
+        
+        // Заполняем данные профиля
+        document.getElementById('profile-username').innerHTML = `
+            <span>${user.username}</span>
+            <span class="profile-tag">#${user.tag || '0000'}</span>
+        `;
+        
+        document.getElementById('profile-status-text').textContent = 
+            user.status === 'online' ? 'Online' : 
+            user.status === 'idle' ? 'Idle' : 
+            user.status === 'dnd' ? 'Do Not Disturb' : 'Offline';
+        
+        // Аватар
+        const avatarImg = document.getElementById('profile-avatar-img');
+        if (typeof user.avatar === 'string') {
+            avatarImg.style.display = 'none';
+            document.querySelector('.profile-avatar').textContent = user.avatar;
+        } else {
+            avatarImg.style.display = 'block';
+            avatarImg.src = user.avatar;
+        }
+        
+        // Игровой статус
+        const gameStatus = document.getElementById('profile-game');
+        if (user.game) {
+            gameStatus.style.display = 'flex';
+            gameStatus.innerHTML = `
+                <i class="fas fa-gamepad"></i>
+                <span>Играет в ${user.game.name} (${user.game.time})</span>
+            `;
+        } else {
+            gameStatus.style.display = 'none';
+        }
+        
+        // Бейджи
+        const badgesContainer = document.getElementById('profile-badges');
+        badgesContainer.innerHTML = '';
+        if (user.badges && user.badges.length > 0) {
+            user.badges.forEach(badge => {
+                const badgeElement = document.createElement('div');
+                badgeElement.className = `profile-badge ${badge}`;
+                badgeElement.title = getBadgeTitle(badge);
+                badgesContainer.appendChild(badgeElement);
+            });
+        }
+        
+        // Показываем профиль
+        document.getElementById('user-profile-popup').style.display = 'block';
+        
+        // Позиционируем профиль рядом с курсором
+        document.addEventListener('mousemove', positionProfile);
+    }
+
+    function hideUserProfile() {
+        document.getElementById('user-profile-popup').style.display = 'none';
+        document.removeEventListener('mousemove', positionProfile);
+    }
+
+    function positionProfile(e) {
+        const profile = document.getElementById('user-profile-popup');
+        profile.style.left = `${e.clientX + 20}px`;
+        profile.style.top = `${e.clientY}px`;
+    }
+
+    function getBadgeTitle(badge) {
+        switch(badge) {
+            case 'developer': return 'Active Developer';
+            case 'partner': return 'Partnered Server Owner';
+            case 'hypesquad': return 'HypeSquad Events';
+            case 'bug-hunter': return 'Bug Hunter';
+            case 'early-supporter': return 'Early Supporter';
+            case 'premium': return 'Xid Premium';
+            default: return '';
+        }
+    }
+
+    // Обработчики для мини-профиля
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.user-avatar, .message-avatar, .member-avatar')) {
+            const userId = e.target.closest('[data-user-id]')?.dataset.userId || state.currentUser.id;
+            showUserProfile(userId);
+        } else if (!e.target.closest('#user-profile-popup')) {
+            hideUserProfile();
+        }
+    });
+
+    // Поиск серверов
+    function searchServers(query) {
+        const resultsContainer = document.getElementById('server-search-results');
+        resultsContainer.innerHTML = '';
+        
+        if (!query.trim()) {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <p>Введите запрос для поиска серверов</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Симулируем результаты поиска
+        const sampleServers = [
+            { id: 'server1', name: 'Xid Official', members: 12543, description: 'Официальный сервер Xid' },
+            { id: 'server2', name: 'Gaming Community', members: 8765, description: 'Сообщество геймеров' },
+            { id: 'server3', name: 'Developers Hub', members: 3421, description: 'Для разработчиков и IT-специалистов' }
+        ].filter(server => 
+            server.name.toLowerCase().includes(query.toLowerCase()) || 
+            server.description.toLowerCase().includes(query.toLowerCase())
+        );
+        
+        if (sampleServers.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-frown"></i>
+                    <p>Серверов по запросу "${query}" не найдено</p>
+                </div>
+            `;
+            return;
+        }
+        
+        sampleServers.forEach(server => {
+            const serverElement = document.createElement('div');
+            serverElement.className = 'server-result';
+            serverElement.innerHTML = `
+                <div class="server-icon">X</div>
+                <div class="server-info">
+                    <div class="server-name">${server.name}</div>
+                    <div class="server-members">${server.members.toLocaleString()} участников</div>
+                    <div class="server-description">${server.description}</div>
+                </div>
+                <button class="btn btn-primary join-server">Присоединиться</button>
+            `;
+            resultsContainer.appendChild(serverElement);
+        });
+    }
+
+    // Обработчики для поиска серверов
+    document.getElementById('search-servers-btn').addEventListener('click', () => {
+        const query = document.getElementById('server-search-input').value.trim();
+        searchServers(query);
+    });
+
+    document.getElementById('server-search-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            const query = document.getElementById('server-search-input').value.trim();
+            searchServers(query);
+        }
+    });
+
+    // Инициализация голосового чата при входе в голосовой канал
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.channel.voice')) {
+            const channelId = e.target.closest('.channel').dataset.channel;
+            state.currentChannel = channelId;
+            startVoiceChat();
+        }
+    });
+
+    // Добавляем обработчик для создания бота
+    document.getElementById('bot-avatar-preview').addEventListener('click', function() {
+        document.getElementById('bot-avatar-upload').click();
+    });
+
+    document.getElementById('bot-avatar-upload').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                document.getElementById('bot-avatar-preview').innerHTML = `
+                    <img src="${event.target.result}" alt="Аватар бота">
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Добавляем возможность добавлять/удалять ответы бота
+    document.getElementById('add-response').addEventListener('click', function() {
+        const responseItem = document.createElement('div');
+        responseItem.className = 'bot-response-item';
+        responseItem.innerHTML = `
+            <input type="text" class="form-control" placeholder="Триггер (например: привет)">
+            <input type="text" class="form-control" placeholder="Ответ (например: Привет, друг!)">
+            <button class="btn btn-secondary remove-response">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        document.getElementById('bot-responses').appendChild(responseItem);
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-response')) {
+            e.target.closest('.bot-response-item').remove();
+        }
+    });
+
+    // Имитация игрового статуса
+    function simulateGameStatus() {
+        const games = [
+            { name: 'Valorant', exe: 'valorant.exe', icon: 'fad fa-crosshairs' },
+            { name: 'League of Legends', exe: 'league of legends.exe', icon: 'fad fa-sword' },
+            { name: 'Minecraft', exe: 'minecraft.exe', icon: 'fad fa-cube' },
+            { name: 'Fortnite', exe: 'fortnite.exe', icon: 'fad fa-building' },
+            { name: 'CS:GO', exe: 'csgo.exe', icon: 'fad fa-gun' },
+            { name: 'Dota 2', exe: 'dota2.exe', icon: 'fad fa-sword' },
+            { name: 'Apex Legends', exe: 'apex.exe', icon: 'fad fa-running' },
+            { name: 'Call of Duty', exe: 'cod.exe', icon: 'fad fa-soldier' }
+        ];
+
+        // Устанавливаем игровой статус для текущего пользователя
+        if (Math.random() > 0.5) {
+            const randomGame = games[Math.floor(Math.random() * games.length)];
+            const hours = Math.floor(Math.random() * 5);
+            const minutes = Math.floor(Math.random() * 60);
+            
+            state.currentUser.game = {
+                name: randomGame.name,
+                exe: randomGame.exe,
+                time: `${hours}ч ${minutes}м`
+            };
+            
+            // Обновляем статус в списке участников
+            const userMember = state.members.find(m => m.id === state.currentUser.id);
+            if (userMember) {
+                userMember.game = state.currentUser.game;
+            }
+            
+            // Показываем статус в мини-профиле
+            const gameStatus = document.createElement('div');
+            gameStatus.className = 'game-status';
+            gameStatus.innerHTML = `
+                <i class="${randomGame.icon}"></i>
+                <span>${randomGame.name}</span>
+            `;
+            
+            // Обновляем интерфейс
+            updateMemberCounts();
+        }
+    }
+
+    // Запускаем симуляцию игрового статуса через 10 секунд
+    setTimeout(simulateGameStatus, 10000);
+
+    // Инициализация приложения
+    init();
+</script>
+
+<style>
+    /* Добавьте эти стили в конец style.css */
+
+    /* Голосовой чат */
+    .voice-chat-container {
+        display: flex;
+        block-size: 500px;
+    }
+
+    .video-container {
+        flex: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 10px;
+        padding: 10px;
+        overflow-y: auto;
+        background-color: var(--background-tertiary);
+        border-radius: 8px;
+    }
+
+    .video-preview {
+        position: relative;
+        background-color: var(--background-secondary);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .video-preview video {
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+
+    .video-controls {
+        position: absolute;
+        inset-block-end: 10px;
+        inset-inline-start: 0;
+        inset-inline-end: 0;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .video-control-btn {
+        inline-size: 40px;
+        block-size: 40px;
+        border-radius: 50%;
+        background-color: var(--background-accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .video-control-btn:hover {
+        background-color: var(--primary);
+    }
+
+    .video-user-info {
+        position: absolute;
+        inset-block-end: 60px;
+        inset-inline-start: 10px;
+        background-color: rgba(0, 0, 0, 0.7);
+        padding: 5px 10px;
+        border-radius: 4px;
+        color: white;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+    }
+
+    .video-status {
+        margin-inline-start: 10px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .voice-participants {
+        inline-size: 250px;
+        margin-inline-start: 10px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .participants-list {
+        flex: 1;
+        overflow-y: auto;
+        margin-block-end: 10px;
+    }
+
+    .participant {
+        display: flex;
+        align-items: center;
+        padding: 8px;
+        border-radius: 4px;
+        margin-block-end: 5px;
+        background-color: var(--background-tertiary);
+    }
+
+    .participant:hover {
+        background-color: var(--background-accent);
+    }
+
+    .participant-avatar {
+        inline-size: 32px;
+        block-size: 32px;
+        border-radius: 50%;
+        background-color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-inline-end: 10px;
+    }
+
+    .participant-info {
+        flex: 1;
+    }
+
+    .participant-name {
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .participant-status {
+        font-size: 12px;
+        color: var(--text-muted);
+        display: flex;
+        gap: 5px;
+    }
+
+    .voice-settings {
+        padding: 10px;
+        background-color: var(--background-tertiary);
+        border-radius: 8px;
+    }
+
+    .quality-selector, .audio-settings {
+        margin-block-end: 15px;
+    }
+
+    .quality-selector label, .audio-settings label {
+        display: block;
+        margin-block-end: 5px;
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+
+    .quality-selector select {
+        inline-size: 100%;
+        padding: 5px;
+        border-radius: 4px;
+        background-color: var(--background-secondary);
+        color: var(--text-normal);
+        border: none;
+    }
+
+    .audio-settings input[type="range"] {
+        inline-size: 100%;
+    }
+
+    /* Мини-профиль */
+    .user-profile-popup {
+        position: fixed;
+        inline-size: 300px;
+        background-color: var(--background-secondary);
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+
+    .profile-header {
+        position: relative;
+        block-size: 120px;
+    }
+
+    .profile-banner {
+        block-size: 80px;
+        background-color: var(--primary);
+        border-radius: 8px 8px 0 0;
+    }
+
+    .profile-avatar {
+        position: absolute;
+        inset-block-end: -20px;
+        inset-inline-start: 20px;
+        inline-size: 80px;
+        block-size: 80px;
+        border-radius: 50%;
+        background-color: var(--background-tertiary);
+        border: 5px solid var(--background-secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        overflow: hidden;
+    }
+
+    .profile-badges {
+        position: absolute;
+        inset-block-end: -10px;
+        inset-inline-end: 20px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .profile-badge {
+        inline-size: 24px;
+        block-size: 24px;
+        border-radius: 50%;
+        background-color: var(--background-tertiary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+    }
+
+    .profile-badge.developer {
+        background-color: var(--developer);
+        color: black;
+    }
+
+    .profile-badge.partner {
+        background-color: var(--partner);
+        color: white;
+    }
+
+    .profile-badge.premium {
+        background-color: var(--premium);
+        color: white;
+    }
+
+    .profile-body {
+        padding: 30px 20px 20px;
+    }
+
+    .profile-username {
+        font-size: 20px;
+        font-weight: 700;
+        margin-block-end: 5px;
+        display: flex;
+        align-items: center;
+    }
+
+    .profile-tag {
+        font-size: 16px;
+        color: var(--text-muted);
+        margin-inline-start: 5px;
+    }
+
+    .profile-status {
+        display: flex;
+        align-items: center;
+        margin-block-end: 15px;
+    }
+
+    .status-dot {
+        inline-size: 10px;
+        block-size: 10px;
+        border-radius: 50%;
+        margin-inline-end: 5px;
+    }
+
+    .status-dot.online {
+        background-color: var(--online);
+    }
+
+    .status-dot.idle {
+        background-color: var(--idle);
+    }
+
+    .status-dot.dnd {
+        background-color: var(--dnd);
+    }
+
+    .status-dot.offline {
+        background-color: var(--offline);
+    }
+
+    .profile-game {
+        display: flex;
+        align-items: center;
+        margin-block-end: 15px;
+        padding: 8px;
+        background-color: var(--background-tertiary);
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .profile-game i {
+        margin-inline-end: 8px;
+        color: var(--game-status);
+    }
+
+    .profile-bio {
+        margin-block-end: 15px;
+        font-size: 14px;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+
+    .profile-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .profile-action-btn {
+        flex: 1;
+        padding: 8px;
+        background-color: var(--background-tertiary);
+        border: none;
+        border-radius: 4px;
+        color: var(--text-normal);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        font-size: 14px;
+    }
+
+    .profile-action-btn:hover {
+        background-color: var(--background-accent);
+    }
+
+    /* Поиск серверов */
+    .search-container {
+        display: flex;
+        gap: 10px;
+        margin-block-end: 20px;
+    }
+
+    .search-container input {
+        flex: 1;
+    }
+
+    .server-list {
+        max-block-size: 400px;
+        overflow-y: auto;
+    }
+
+    .server-result {
+        display: flex;
+        align-items: center;
+        padding: 15px;
+        border-radius: 8px;
+        margin-block-end: 10px;
+        background-color: var(--background-tertiary);
+    }
+
+    .server-result:hover {
+        background-color: var(--background-accent);
+    }
+
+    .server-icon {
+        inline-size: 40px;
+        block-size: 40px;
+        border-radius: 50%;
+        background-color: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-inline-end: 15px;
+        font-size: 18px;
+        font-weight: 700;
+    }
+
+    .server-info {
+        flex: 1;
+    }
+
+    .server-name {
+        font-weight: 600;
+        margin-block-end: 3px;
+    }
+
+    .server-members {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-block-end: 5px;
+    }
+
+    .server-description {
+        font-size: 14px;
+        color: var(--text-muted);
+    }
+
+    .join-server {
+        margin-inline-start: 15px;
+        white-space: nowrap;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+    }
+
+    .no-results i {
+        font-size: 40px;
+        margin-block-end: 15px;
+    }
+
+    /* Создание бота */
+    .bot-avatar-preview {
+        inline-size: 80px;
+        block-size: 80px;
+        border-radius: 50%;
+        background-color: var(--background-tertiary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 30px;
+        cursor: pointer;
+        overflow: hidden;
+    }
+
+    .bot-avatar-preview img {
+        inline-size: 100%;
+        block-size: 100%;
+        object-fit: cover;
+    }
+
+    .bot-responses {
+        margin-block-end: 15px;
+    }
+
+    .bot-response-item {
+        display: flex;
+        gap: 10px;
+        margin-block-end: 10px;
+    }
+
+    .bot-response-item input {
+        flex: 1;
+    }
+
+    .remove-response {
+        inline-size: 40px;
+    }
+
+    /* Игровой статус */
+    .game-status {
+        display: inline-flex;
+        align-items: center;
+        background-color: var(--background-tertiary);
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-inline-start: 10px;
+    }
+
+    .game-status i {
+        margin-inline-end: 5px;
+        color: var(--game-status);
+    }
+</style>
+</body>
+</html>
