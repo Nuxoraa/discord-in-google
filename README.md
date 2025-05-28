@@ -15,3 +15,4 @@ If you're interested — take a look, leave feedback, and feel free to ask quest
 
 💡 If you have ideas for improvements — don’t hesitate to share them!
 You’re also welcome to modify the project yourself and publish it on your own page, but please make sure to include a link to my GitHub profile as the original creator. Respect the work, please.
+made by Nuxora
