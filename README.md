@@ -1,5 +1,11 @@
 # Discord Web Clone
 
+![HTML](https://img.shields.io/badge/HTML-5-E34F26?logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS-3-1572B6?logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-ES6-F7DF1E?logo=javascript&logoColor=black)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-3185-brightgreen)
+
 A browser-based recreation of Discord, built from scratch using only HTML, CSS, and JavaScript. Created by a 14-year-old developer named Nuxora with 4 years of experience in web development.
 
 ## About
@@ -35,3 +41,4 @@ To run the project locally:
 1. Clone the repository:
    ```bash
    git clone https://github.com/Nuxoraa/discord-web-clone
+
