@@ -40,5 +40,5 @@ To run the project locally:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Nuxoraa/discord-web-clone
+   git clone [https://github.com/Nuxoraa/discord-web-clone](https://github.com/Nuxoraa/discord-in-google)
 
